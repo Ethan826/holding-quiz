@@ -1,0 +1,16 @@
+/* App.css */
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full viewport height */
+  background-color: #f0f0f0; /* Optional: Light background for better visibility */
+}
+
+svg {
+  width: 50vw; /* 50% of the viewport width */
+  height: 50vw; /* Maintain aspect ratio by making height equal to width */
+  max-width: 500px; /* Optional: Cap the size for large screens */
+  max-height: 500px; /* Optional: Cap the size for large screens */
+}
