@@ -1,5 +1,5 @@
 import { expect, describe, it, test } from "bun:test";
-import { Effect, Option } from "effect";
+import { Option } from "effect";
 import {
   addHeadings,
   directionForTurn,
@@ -8,11 +8,8 @@ import {
   HeadingSchema,
   headingRangeContains,
   subtractHeadings,
-  RandomHeading,
-  Heading,
   getCardinalDirection,
 } from "./Heading";
-import { identity } from "effect/Function";
 
 describe("headingDecodeSync", () => {
   it("should create a valid headingDecodeSync", () => {
@@ -231,15 +228,6 @@ describe("isInHeadingRange", () => {
         direction: "Left",
       })(HeadingSchema.make(270))
     ).toBeFalse();
-  });
-});
-
-describe("RandomHeading", () => {
-  test("random heading", async () => {
-    const results: ReadonlyArray<Effect.Effect<Heading, Error, never>> =
-      Array(100).fill(RandomHeading);
-    const x = Effect.forEach(results, identity).pipe(Effect.either);
-    console.log(Effect.runSync(x));
   });
 });
 

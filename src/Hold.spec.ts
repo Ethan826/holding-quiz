@@ -42,6 +42,7 @@ describe("Schema Tests", () => {
         inboundCourse: 180,
         durationSeconds: 5,
         direction: "Left",
+        efcMinutes: 33,
       };
       const result = decodeHold(hold);
       expect(result._tag).toBe("Right");
@@ -54,6 +55,7 @@ describe("Schema Tests", () => {
         fix: "GSO",
         inboundCourse: 360,
         direction: "Right",
+        efcMinutes: 18,
       };
       const result = decodeHold(hold);
       expect(result._tag).toBe("Right");
@@ -119,6 +121,7 @@ describe("computeHoldEntry", () => {
       inboundCourse: HeadingSchema.make(270),
       durationSeconds: DurationSecondsSchema.make(60),
       direction: "Left",
+      efcMinutes: 11,
     };
 
     const result = determineHoldEntry(hold)(HeadingSchema.make(270));
@@ -132,6 +135,7 @@ describe("computeHoldEntry", () => {
       inboundCourse: HeadingSchema.make(270),
       durationSeconds: DurationSecondsSchema.make(60),
       direction: "Left",
+      efcMinutes: 22,
     };
 
     const result = determineHoldEntry(hold)(HeadingSchema.make(140));
@@ -145,6 +149,7 @@ describe("computeHoldEntry", () => {
       inboundCourse: HeadingSchema.make(270),
       durationSeconds: DurationSecondsSchema.make(60),
       direction: "Left",
+      efcMinutes: 33,
     };
 
     const result = determineHoldEntry(hold)(HeadingSchema.make(50));

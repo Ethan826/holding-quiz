@@ -370,7 +370,7 @@ type HoldingPatternScenario = {
  * Generates a holding pattern scenario, including the hold definition,
  * course to fix, and the set of applicable hold entries.
  */
-const generateHoldingScenarioEffect: Effect.Effect<
+export const generateHoldingScenarioEffect: Effect.Effect<
   HoldingPatternScenario,
   unknown,
   never

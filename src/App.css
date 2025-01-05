@@ -1,16 +1,226 @@
 /* App.css */
+
+/* Importing a modern font from Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
+
 body {
   margin: 0;
+  font-family: "Roboto", sans-serif;
+  background-color: #e0f7fa; /* Light cyan background for a calming effect */
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh; /* Full viewport height */
-  background-color: #f0f0f0; /* Optional: Light background for better visibility */
 }
 
-svg {
-  width: 50vw; /* 50% of the viewport width */
-  height: 50vw; /* Maintain aspect ratio by making height equal to width */
-  max-width: 500px; /* Optional: Cap the size for large screens */
-  max-height: 500px; /* Optional: Cap the size for large screens */
+.app-container {
+  background-color: #ffffff; /* White background for the app container */
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  max-width: 800px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.user-assumption-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.user-assumption-text {
+  font-size: 18px;
+  color: #333333; /* Dark gray for better readability */
+  line-height: 1.5;
+}
+
+.holding-instructions-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.holding-instructions-title {
+  font-size: 26px;
+  color: #00796b; /* Teal color for the title */
+  margin-bottom: 10px;
+}
+
+.holding-instructions-text {
+  font-size: 20px;
+  color: #004d40; /* Dark teal for the instructions */
+  line-height: 1.6;
+}
+
+.compass-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Styling the DirectionalGyro SVG */
+.directional-gyro {
+  width: 60vw; /* Increased width for better visibility */
+  height: 60vw; /* Maintain aspect ratio by making height equal to width */
+  max-width: 600px; /* Increased cap for larger screens */
+  max-height: 600px; /* Increased cap for larger screens */
+  transition: none; /* Disable rotation transitions */
+  /* Removed hover rotation effect */
+}
+
+/* SolutionReveal Component Styles */
+.solution-reveal-container {
+  margin-top: 20px;
+  text-align: center;
+  width: 100%; /* Ensure the container takes full width of the parent */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center align items horizontally */
+}
+
+.reveal-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  background-color: #00796b; /* Teal background */
+  color: #ffffff; /* White text */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 15px;
+  width: 220px; /* Fixed width for consistency */
+}
+
+.reveal-button:hover {
+  background-color: #004d40; /* Darker teal on hover */
+}
+
+.solution-container {
+  background-color: #f1f8e9; /* Light green background for contrast */
+  border: 1px solid #c5e1a5; /* Border matching the color scheme */
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 420px;
+  width: 100%; /* Ensure it doesn't exceed the parent width */
+  box-sizing: border-box; /* Include padding and border in the element's total width */
+}
+
+.solution-title {
+  font-size: 22px;
+  color: #2e7d32; /* Dark green for the title */
+  margin-bottom: 10px;
+}
+
+.solution-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.solution-item {
+  font-size: 20px;
+  color: #1b5e20; /* Even darker green for list items */
+  margin: 5px 0;
+}
+
+/* New Problem Button Styles */
+.new-problem-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  background-color: #ff9800; /* Amber background for differentiation */
+  color: #ffffff; /* White text */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 30px;
+  width: 220px; /* Fixed width to align with other buttons */
+}
+
+.new-problem-button:hover {
+  background-color: #e68900; /* Darker amber on hover */
+}
+
+.loading-text {
+  font-size: 20px;
+  color: #00796b; /* Teal color to match theme */
+}
+
+.error-text {
+  color: #d32f2f; /* Red color for errors */
+  background-color: #ffcccc; /* Light red background */
+  padding: 10px 20px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+.confirmation-text {
+  color: #388e3c; /* Green color for confirmations */
+  background-color: #d0f0c0; /* Light green background */
+  padding: 10px 20px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 800px) {
+  .holding-instructions-title {
+    font-size: 24px;
+  }
+
+  .holding-instructions-text {
+    font-size: 18px;
+  }
+
+  .solution-title {
+    font-size: 20px;
+  }
+
+  .solution-item {
+    font-size: 18px;
+  }
+
+  .solution-container {
+    max-width: 350px;
+  }
+}
+
+@media (max-width: 600px) {
+  .user-assumption-text,
+  .holding-instructions-text {
+    font-size: 16px;
+  }
+
+  .directional-gyro {
+    width: 70vw;
+    height: 70vw;
+  }
+
+  .reveal-button {
+    font-size: 14px;
+    padding: 10px 20px;
+    width: 180px; /* Adjusted width for smaller screens */
+  }
+
+  .solution-title {
+    font-size: 18px;
+  }
+
+  .solution-item {
+    font-size: 16px;
+  }
+
+  .solution-container {
+    max-width: 300px; /* Adjusted max-width for smaller screens */
+  }
+
+  .new-problem-button {
+    font-size: 14px;
+    padding: 10px 20px;
+    width: 180px; /* Adjusted width for smaller screens */
+  }
 }
