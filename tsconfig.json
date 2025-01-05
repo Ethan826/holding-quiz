@@ -4,5 +4,5 @@
     { "path": "./tsconfig.app.json" },
     { "path": "./tsconfig.node.json" }
   ],
-  "compilerOptions": {"strict": true}
+  "compilerOptions": { "strict": true, "types": ["bun"] }
 }
