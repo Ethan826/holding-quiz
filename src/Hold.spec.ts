@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect, test } from "bun:test";
 import {
   decodeDurationSeconds,
   decodeDistanceDecimiles,
@@ -154,5 +154,19 @@ describe("computeHoldEntry", () => {
 
     const result = determineHoldEntry(hold)(HeadingSchema.make(50));
     expect(result).toEqual(new Set([{ _tag: "ParallelEntry" }]));
+  });
+
+  test("observed error", () => {
+    const hold: Hold = {
+      _tag: "TimeBasedLeg",
+      fix: "RDU",
+      inboundCourse: HeadingSchema.make(148),
+      durationSeconds: DurationSecondsSchema.make(60),
+      direction: "Right",
+      efcMinutes: 33,
+    };
+
+    const result = determineHoldEntry(hold)(HeadingSchema.make(148));
+    expect(result).toEqual(new Set([{ _tag: "DirectEntry" }]));
   });
 });

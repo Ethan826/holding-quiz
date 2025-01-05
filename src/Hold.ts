@@ -1,8 +1,7 @@
 import { faker } from "@faker-js/faker";
-import { Console, Effect, Match, Random, Schema } from "effect";
+import { Effect, Match, Random, Schema } from "effect";
 import {
   addHeadings,
-  getCardinalDirection,
   Heading,
   headingRangeContains,
   HeadingSchema,
@@ -172,7 +171,7 @@ const computeEntryBoundaries = ({
   const adjustHeading = direction === "Right" ? subtractHeadings : addHeadings;
 
   // Boundary between Direct and other entries
-  const parallelDirect = adjustHeading(HeadingSchema.make(70))(inboundCourse);
+  const parallelDirect = adjustHeading(inboundCourse)(HeadingSchema.make(70));
 
   // TeardropDirect is the reverse of parallelDirect
   const teardropDirect = reverseCourse(parallelDirect);
@@ -396,22 +395,3 @@ export const generateHoldingScenarioEffect: Effect.Effect<
     solution: determineHoldEntry(hold)(courseToFix),
   };
 });
-
-export const atcifyHold = (hold: Hold): string => {
-  return `Hold ${getCardinalDirection(reverseCourse(hold.inboundCourse))} of ${
-    hold.fix
-  } on the ${reverseCourse(hold.inboundCourse)}º radial, ${
-    hold.direction
-  } turns, ${
-    hold._tag === "DistanceBasedLeg"
-      ? `${hold.distanceDecimiles / 10} mile`
-      : `${hold.durationSeconds / 60} minute`
-  } legs, expect further clearance in ${hold.efcMinutes} minutes.`;
-};
-
-pipe(
-  generateHoldingScenarioEffect,
-  Effect.tap(Console.log),
-  Effect.tap(({ hold }) => Console.log(atcifyHold(hold))),
-  Effect.runSync
-);

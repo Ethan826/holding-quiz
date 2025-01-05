@@ -1,12 +1,12 @@
-// App.tsx
-
 import "./App.css";
 import { DirectionalGyro } from "./DirectionalGyro/DirectionalGyro";
 import { CompassConfigProps } from "./DirectionalGyro/CompassConfigProps";
 import { generateHoldingScenarioEffect, Hold, HoldEntry } from "./Hold";
 import { Effect } from "effect";
-import { getCardinalDirection, reverseCourse } from "./Heading";
 import { useEffect, useState } from "react";
+import { HoldingInstructions } from "./HoldingInstructions";
+import { SolutionReveal } from "./SolutionReveal";
+import { UserAssumption } from "./UserAssumption";
 
 const COMPASS_PROPS: CompassConfigProps = {
   cx: 100,
@@ -20,46 +20,18 @@ const COMPASS_PROPS: CompassConfigProps = {
   tickLabelOffset: 5,
 };
 
-// HoldingInstructions.tsx
-
-interface HoldingInstructionsProps {
-  hold: Hold;
-}
-
-// HoldingInstructions.tsx
-
-interface HoldingInstructionsProps {
-  hold: Hold;
-}
-
-export const HoldingInstructions: React.FC<HoldingInstructionsProps> = ({
-  hold,
-}) => {
-  // Construct the ATC holding instruction
-  const instructions = `Hold ${getCardinalDirection(
-    reverseCourse(hold.inboundCourse)
-  )} of ${hold.fix} on the ${reverseCourse(hold.inboundCourse)}º radial, ${
-    hold.direction
-  } turns, ${
-    hold._tag === "DistanceBasedLeg"
-      ? `${hold.distanceDecimiles / 10} mile`
-      : `${hold.durationSeconds / 60} minute`
-  } legs, expect further clearance in ${hold.efcMinutes} minutes.`;
-
-  return (
-    <div className="holding-instructions-container">
-      <h1 className="holding-instructions-title">ATC Holding Instructions</h1>
-      <p className="holding-instructions-text">{instructions}</p>
-    </div>
-  );
-};
-
 const App: React.FC = () => {
   const [holdingScenario, setHoldingScenario] = useState<{
     hold: Hold;
     courseToFix: number;
     solution: ReadonlySet<HoldEntry>;
   } | null>(null);
+
+  console.log(
+    `Hold definition: ${JSON.stringify(holdingScenario?.hold, null, 2)}`,
+    `Course to fix: ${holdingScenario?.courseToFix}.`,
+    `Solution(s): ${JSON.stringify([...(holdingScenario?.solution ?? [])])}`
+  );
 
   const [isSolutionRevealed, setIsSolutionRevealed] = useState<boolean>(false);
 
@@ -132,68 +104,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-// SolutionReveal.tsx
-
-interface SolutionRevealProps {
-  solution: ReadonlySet<HoldEntry>;
-  isRevealed: boolean;
-  toggleSolution: () => void;
-}
-
-/**
- * Maps HoldEntry _tag values to user-friendly strings.
- *
- * @param tag - The _tag value from HoldEntry.
- * @returns A readable string representing the hold entry.
- */
-const mapHoldEntryTagToString = (tag: string): string => {
-  // Insert a space before each uppercase letter (except the first) and capitalize the first letter
-  return tag.replace(/([A-Z])/g, " $1").trim();
-};
-
-export const SolutionReveal: React.FC<SolutionRevealProps> = ({
-  solution,
-  isRevealed,
-  toggleSolution,
-}) => {
-  // Convert solution set to array and map tags to readable strings
-  const solutionEntries = Array.from(solution).map((entry) =>
-    mapHoldEntryTagToString(entry._tag)
-  );
-
-  return (
-    <div className="solution-reveal-container">
-      <button className="reveal-button" onClick={toggleSolution}>
-        {isRevealed ? "Hide Correct Entry" : "Show Correct Entry"}
-      </button>
-      {isRevealed && (
-        <div className="solution-container">
-          <h2 className="solution-title">Correct Entry:</h2>
-          <ul className="solution-list">
-            {solutionEntries.map((entry, index) => (
-              <li key={index} className="solution-item">
-                {entry}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-};
-
-interface UserAssumptionProps {
-  heading: number;
-}
-
-export const UserAssumption: React.FC<UserAssumptionProps> = () => {
-  return (
-    <div className="user-assumption-container">
-      <p className="user-assumption-text">
-        Assume you are direct to the fix on the heading indicated by the heading
-        indicator.
-      </p>
-    </div>
-  );
-};
