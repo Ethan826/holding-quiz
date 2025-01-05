@@ -11,21 +11,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Setup Bun
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      # 3. Install Dependencies
       - name: Install Dependencies
         run: bun install
 
-      # 4. Run Tests
       - name: Run Tests
         run: bun test
 
@@ -35,25 +31,20 @@ jobs:
     needs: test
 
     steps:
-      # 1. Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Setup Bun
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
-      # 3. Install Dependencies
       - name: Install Dependencies
         run: bun install
 
-      # 4. Build the Project
       - name: Build Project
         run: bun run build
 
-      # 5. Upload Build Artifacts (Optional)
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -66,15 +57,11 @@ jobs:
     needs: build
 
     steps:
-      # 1. Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # 2. Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./dist
-          # Optional: Specify a custom domain
-          # cname: yourcustomdomain.com
