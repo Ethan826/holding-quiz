@@ -1,0 +1,45 @@
+name: Build and Deploy
+
+# Trigger the workflow on push events to the main branch
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. Setup Bun
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # 3. Install Dependencies
+      - name: Install Dependencies
+        run: bun install
+
+      # 4. Run Tests
+      - name: Run Tests
+        run: bun test
+        # Optional: Continue even if tests fail (remove if you want to fail the build)
+        # continue-on-error: true
+
+      # 5. Build the Project
+      - name: Build Project
+        run: bun run build
+
+      # 6. Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          # Optional: Specify a custom domain
+          # cname: yourcustomdomain.com
