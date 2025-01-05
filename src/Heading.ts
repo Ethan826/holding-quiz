@@ -71,3 +71,27 @@ export const RandomHeading = pipe(
     (e) => new Error(`Creation of random heading failed: ${e.message}`)
   )
 );
+
+/**
+ * Maps a heading in degrees to one of the 8 cardinal directions.
+ *
+ * @param heading - The heading in degrees (0-360).
+ * @returns The corresponding cardinal direction.
+ */
+export const getCardinalDirection = (heading: Heading): string => {
+  const adjustedHeading = addHeadings(heading)(HeadingSchema.make(22));
+  const index = Math.floor(adjustedHeading / 45);
+
+  const directions = [
+    "North",
+    "Northeast",
+    "East",
+    "Southeast",
+    "South",
+    "Southwest",
+    "West",
+    "Northwest",
+  ];
+
+  return directions[index];
+};

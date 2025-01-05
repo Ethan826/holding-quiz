@@ -1,35 +1,35 @@
 import { describe, it, expect } from "bun:test";
 import {
-  secondDecodeUnknownEither,
-  decimileDecodeUnknownEither,
-  holdDecodeUnknownEither,
+  decodeDurationSeconds,
+  decodeDistanceDecimiles,
+  decodeHold,
   Hold,
-  SecondSchema,
-  computeEntry,
+  DurationSecondsSchema,
+  determineHoldEntry,
 } from "./Hold";
 import { HeadingSchema } from "./Heading";
 
 describe("Schema Tests", () => {
   describe("Second Schema", () => {
     it("should decode valid seconds correctly", () => {
-      const result = secondDecodeUnknownEither(30);
+      const result = decodeDurationSeconds(30);
       expect(result._tag).toBe("Right");
     });
 
     it("should reject negative seconds", () => {
-      const result = secondDecodeUnknownEither(-1);
+      const result = decodeDurationSeconds(-1);
       expect(result._tag).toBe("Left");
     });
   });
 
   describe("Decimile Schema", () => {
     it("should decode valid decimiles correctly", () => {
-      const result = decimileDecodeUnknownEither(10);
+      const result = decodeDistanceDecimiles(10);
       expect(result._tag).toBe("Right");
     });
 
     it("should reject negative decimiles", () => {
-      const result = decimileDecodeUnknownEither(-5);
+      const result = decodeDistanceDecimiles(-5);
       expect(result._tag).toBe("Left");
     });
   });
@@ -40,22 +40,22 @@ describe("Schema Tests", () => {
         _tag: "TimeBasedLeg",
         fix: "RDU",
         inboundCourse: 180,
-        time: 5,
-        turns: "Left",
+        durationSeconds: 5,
+        direction: "Left",
       };
-      const result = holdDecodeUnknownEither(hold);
+      const result = decodeHold(hold);
       expect(result._tag).toBe("Right");
     });
 
     it("should decode a valid decimile-based hold", () => {
       const hold = {
-        _tag: "DecimileBasedLeg",
-        distance: 15,
+        _tag: "DistanceBasedLeg",
+        distanceDecimiles: 15,
         fix: "GSO",
         inboundCourse: 360,
-        turns: "Right",
+        direction: "Right",
       };
-      const result = holdDecodeUnknownEither(hold);
+      const result = decodeHold(hold);
       expect(result._tag).toBe("Right");
     });
 
@@ -66,7 +66,7 @@ describe("Schema Tests", () => {
         turns: "Right",
         inboundCourse: 361, // Invalid course
       };
-      const result = holdDecodeUnknownEither(hold);
+      const result = decodeHold(hold);
       expect(result._tag).toBe("Left");
     });
   });
@@ -117,37 +117,37 @@ describe("computeHoldEntry", () => {
       _tag: "TimeBasedLeg",
       fix: "RDU",
       inboundCourse: HeadingSchema.make(270),
-      time: SecondSchema.make(60),
-      turns: "Left",
+      durationSeconds: DurationSecondsSchema.make(60),
+      direction: "Left",
     };
 
-    const result = computeEntry(hold)(HeadingSchema.make(270));
-    expect(result).toEqual(new Set([{ _tag: "Direct" }]));
+    const result = determineHoldEntry(hold)(HeadingSchema.make(270));
+    expect(result).toEqual(new Set([{ _tag: "DirectEntry" }]));
   });
 
-  // it("correctly determines a teardrop entry with left turns", () => {
-  //   const hold: Hold = {
-  //     _tag: "TimeBasedLeg",
-  //     fix: "RDU",
-  //     inboundCourse: HeadingSchema.make(270),
-  //     time: SecondSchema.make(60),
-  //     turns: "Left",
-  //   };
+  it("correctly determines a teardrop entry with left turns", () => {
+    const hold: Hold = {
+      _tag: "TimeBasedLeg",
+      fix: "RDU",
+      inboundCourse: HeadingSchema.make(270),
+      durationSeconds: DurationSecondsSchema.make(60),
+      direction: "Left",
+    };
 
-  //   const result = computeEntry(hold)(HeadingSchema.make(140));
-  //   expect(result).toEqual(new Set([{ _tag: "Teardrop" }]));
-  // });
+    const result = determineHoldEntry(hold)(HeadingSchema.make(140));
+    expect(result).toEqual(new Set([{ _tag: "TeardropEntry" }]));
+  });
 
-  // it("correctly determines a parallel entry with left turns", () => {
-  //   const hold: Hold = {
-  //     _tag: "TimeBasedLeg",
-  //     fix: "RDU",
-  //     inboundCourse: HeadingSchema.make(270),
-  //     time: SecondSchema.make(60),
-  //     turns: "Left",
-  //   };
+  it("correctly determines a parallel entry with left turns", () => {
+    const hold: Hold = {
+      _tag: "TimeBasedLeg",
+      fix: "RDU",
+      inboundCourse: HeadingSchema.make(270),
+      durationSeconds: DurationSecondsSchema.make(60),
+      direction: "Left",
+    };
 
-  //   const result = computeEntry(hold)(HeadingSchema.make(50));
-  //   expect(result).toEqual(new Set([{ _tag: "Parallel" }]));
-  // });
+    const result = determineHoldEntry(hold)(HeadingSchema.make(50));
+    expect(result).toEqual(new Set([{ _tag: "ParallelEntry" }]));
+  });
 });

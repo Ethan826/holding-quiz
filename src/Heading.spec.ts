@@ -10,6 +10,7 @@ import {
   subtractHeadings,
   RandomHeading,
   Heading,
+  getCardinalDirection,
 } from "./Heading";
 import { identity } from "effect/Function";
 
@@ -239,5 +240,68 @@ describe("RandomHeading", () => {
       Array(100).fill(RandomHeading);
     const x = Effect.forEach(results, identity).pipe(Effect.either);
     console.log(Effect.runSync(x));
+  });
+});
+
+describe("getCardinalDirection", () => {
+  it("should return North for 0° and 360°", () => {
+    const heading360 = HeadingSchema.make(360);
+    expect(getCardinalDirection(heading360)).toBe("North");
+  });
+
+  it("should return Northeast for headings between 22.5° and 67.5°", () => {
+    const headings = [30, 45, 60];
+    headings.forEach((degrees) => {
+      const heading = HeadingSchema.make(degrees);
+      expect(getCardinalDirection(heading)).toBe("Northeast");
+    });
+  });
+
+  it("should return East for headings between 67.5° and 112.5°", () => {
+    const headings = [90, 80, 110];
+    headings.forEach((degrees) => {
+      const heading = HeadingSchema.make(degrees);
+      expect(getCardinalDirection(heading)).toBe("East");
+    });
+  });
+
+  it("should return Southeast for headings between 112.5° and 157.5°", () => {
+    const headings = [120, 135, 150];
+    headings.forEach((degrees) => {
+      const heading = HeadingSchema.make(degrees);
+      expect(getCardinalDirection(heading)).toBe("Southeast");
+    });
+  });
+
+  it("should return South for headings between 157.5° and 202.5°", () => {
+    const headings = [180, 170, 200];
+    headings.forEach((degrees) => {
+      const heading = HeadingSchema.make(degrees);
+      expect(getCardinalDirection(heading)).toBe("South");
+    });
+  });
+
+  it("should return Southwest for headings between 202.5° and 247.5°", () => {
+    const headings = [220, 225, 240];
+    headings.forEach((degrees) => {
+      const heading = HeadingSchema.make(degrees);
+      expect(getCardinalDirection(heading)).toBe("Southwest");
+    });
+  });
+
+  it("should return West for headings between 247.5° and 292.5°", () => {
+    const headings = [270, 260, 290];
+    headings.forEach((degrees) => {
+      const heading = HeadingSchema.make(degrees);
+      expect(getCardinalDirection(heading)).toBe("West");
+    });
+  });
+
+  it("should return Northwest for headings between 292.5° and 337.5°", () => {
+    const headings = [300, 315, 330];
+    headings.forEach((degrees) => {
+      const heading = HeadingSchema.make(degrees);
+      expect(getCardinalDirection(heading)).toBe("Northwest");
+    });
   });
 });

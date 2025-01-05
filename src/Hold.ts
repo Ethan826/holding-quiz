@@ -2,6 +2,7 @@ import { faker } from "@faker-js/faker";
 import { Console, Effect, Match, Random, Schema } from "effect";
 import {
   addHeadings,
+  getCardinalDirection,
   Heading,
   headingRangeContains,
   HeadingSchema,
@@ -11,88 +12,96 @@ import {
 } from "./Heading";
 import { constant, pipe } from "effect/Function";
 import { NoSuchElementException } from "effect/Cause";
+import { Direction } from "./Direction";
 
 /**
- * A branded schema for representing seconds as a non-negative integer.
- * The brand is "Second" to distinguish this type from other numeric types.
+ * A branded schema for representing duration in seconds as a non-negative
+ * integer.  The brand is "DurationSeconds" to distinguish this type from other
+ * numeric types.
  */
-export const SecondSchema = Schema.Int.pipe(
+export const DurationSecondsSchema = Schema.Int.pipe(
   Schema.nonNegative(),
-  Schema.brand("Second")
+  Schema.brand("DurationSeconds")
 );
 
 /**
- * A type representing the result of decoding a second.
- * See `SecondSchema`.
+ * A type representing the result of decoding a duration in seconds. See
+ * `DurationSecondsSchema`.
  */
-export type Second = Schema.Schema.Type<typeof SecondSchema>;
+export type DurationSeconds = Schema.Schema.Type<typeof DurationSecondsSchema>;
 
 /**
- * A utility for decoding an unknown value into a `Second`-branded integer.
+ * A utility for decoding an unknown value into a `DurationSeconds`-branded
+ * integer.
  */
-export const secondDecodeUnknownEither =
-  Schema.decodeUnknownEither(SecondSchema);
-
-/**
- * A branded schema for representing distances in "decimiles" as a non-negative
- * integer. The brand is "Decimile" to distinguish this type from other numeric
- * types.
- */
-export const DecimileSchema = Schema.Int.pipe(
-  Schema.nonNegative(),
-  Schema.brand("Decimile")
+export const decodeDurationSeconds = Schema.decodeUnknownEither(
+  DurationSecondsSchema
 );
 
 /**
- * A type representing the result of decoding a decimile distance.
- * See `DecimileSchema`.
+ * A branded schema for representing distances in decimiles as a non-negative
+ * integer. The brand is "DistanceDecimiles" to distinguish this type from
+ * other numeric types.
  */
-export type Decimile = Schema.Schema.Type<typeof DecimileSchema>;
+export const DistanceDecimilesSchema = Schema.Int.pipe(
+  Schema.nonNegative(),
+  Schema.brand("DistanceDecimiles")
+);
 
 /**
- * A utility for decoding an unknown value into a `Decimile`-branded integer.
+ * A type representing the result of decoding a distance in decimiles. See
+ * `DistanceDecimilesSchema`.
  */
-export const decimileDecodeUnknownEither =
-  Schema.decodeUnknownEither(DecimileSchema);
+export type DistanceDecimiles = Schema.Schema.Type<
+  typeof DistanceDecimilesSchema
+>;
 
 /**
- * A schema for the direction of a holding pattern.
- * Supported values are either "Left" or "Right".
+ * A utility for decoding an unknown value into a `DistanceDecimiles`-branded
+ * integer.
  */
-export const DirectionSchema = Schema.Union(
+export const decodeDistanceDecimiles = Schema.decodeUnknownEither(
+  DistanceDecimilesSchema
+);
+
+/**
+ * A schema for the direction of a holding pattern. Supported values are either
+ * "Left" or "Right".
+ */
+export const HoldingDirectionSchema = Schema.Union(
   Schema.Literal("Left"),
   Schema.Literal("Right")
 );
 
 /**
- * Represents the direction of a holding pattern.
- * May be "Left" or "Right".
+ * Represents the direction of a holding pattern. Can be either "Left" or
+ * "Right".
  */
-export type Direction = Schema.Schema.Type<typeof DirectionSchema>;
+export type HoldingDirection = Schema.Schema.Type<
+  typeof HoldingDirectionSchema
+>;
 
-/**
- * A tagged schema for a time-based holding pattern leg. It has a fix (string),
- * inbound course (heading), duration in seconds, and direction.
- */
+/** A tagged schema for a time-based holding pattern leg. */
 export const TimeBasedHoldSchema = Schema.TaggedStruct("TimeBasedLeg", {
   fix: Schema.String,
   inboundCourse: HeadingSchema,
-  time: SecondSchema,
-  turns: DirectionSchema,
+  durationSeconds: DurationSecondsSchema,
+  direction: HoldingDirectionSchema,
+  efcMinutes: Schema.Int.pipe(Schema.nonNegative()),
 });
-type TimeBasedHold = Schema.Schema.Type<typeof TimeBasedHoldSchema>;
+export type TimeBasedHold = Schema.Schema.Type<typeof TimeBasedHoldSchema>;
 
-/**
- * A tagged schema for a distance-based holding pattern leg. It has a distance
- * in decimiles (int), fix (string), inbound course (heading), and direction.
- */
+/** A tagged schema for a distance-based holding pattern leg. */
 export const DistanceBasedHoldSchema = Schema.TaggedStruct("DistanceBasedLeg", {
-  distance: DecimileSchema,
+  distanceDecimiles: DistanceDecimilesSchema,
   fix: Schema.String,
   inboundCourse: HeadingSchema,
-  turns: DirectionSchema,
+  direction: HoldingDirectionSchema,
+  efcMinutes: Schema.Int.pipe(Schema.nonNegative()),
 });
-type DistanceBasedHold = Schema.Schema.Type<typeof DistanceBasedHoldSchema>;
+export type DistanceBasedHold = Schema.Schema.Type<
+  typeof DistanceBasedHoldSchema
+>;
 
 /**
  * A union schema that captures either a time-based or distance-based holding
@@ -103,47 +112,45 @@ export const HoldSchema = Schema.Union(
   DistanceBasedHoldSchema
 );
 
-/**
- * Represents either a `TimeBasedLeg` or a `DecimileBasedLeg`.
- */
+/** Represents either a `TimeBasedLeg` or a `DistanceBasedLeg`. */
 export type Hold = Schema.Schema.Type<typeof HoldSchema>;
 
-/**
- * A utility for decoding an unknown value into a `Hold`.
- */
-export const holdDecodeUnknownEither = Schema.decodeUnknownEither(HoldSchema);
+/** A utility for decoding an unknown value into a `Hold`. */
+export const decodeHold = Schema.decodeUnknownEither(HoldSchema);
 
-/**
- * Represents the possible holding pattern entries.
- */
-export type HoldEntry =
-  | Readonly<{ _tag: "Direct" }>
-  | Readonly<{ _tag: "Teardrop" }>
-  | Readonly<{ _tag: "Parallel" }>;
+export const HoldEntrySchema = Schema.Union(
+  Schema.TaggedStruct("DirectEntry", {}),
+  Schema.TaggedStruct("TeardropEntry", {}),
+  Schema.TaggedStruct("ParallelEntry", {})
+);
+
+/** Represents the possible holding pattern entry types. */
+export type HoldEntry = Schema.Schema.Type<typeof HoldEntrySchema>;
 
 /**
  * Creates a `HoldEntry` tagged as "Direct".
  */
-export const makeDirectEntry: () => HoldEntry = constant({ _tag: "Direct" });
+export const createDirectEntry: () => HoldEntry = constant({
+  _tag: "DirectEntry",
+});
 
 /**
  * Creates a `HoldEntry` tagged as "Teardrop".
  */
-export const makeTeardropEntry: () => HoldEntry = constant({
-  _tag: "Teardrop",
+export const createTeardropEntry: () => HoldEntry = constant({
+  _tag: "TeardropEntry",
 });
 
 /**
  * Creates a `HoldEntry` tagged as "Parallel".
  */
-export const makeParallelEntry: () => HoldEntry = constant({
-  _tag: "Parallel",
+export const createParallelEntry: () => HoldEntry = constant({
+  _tag: "ParallelEntry",
 });
 
 /**
- * A set of boundary headings used for dividing an inbound course
- * into segments that determine which type of entry (Direct, Teardrop,
- * or Parallel) applies.
+ * A set of boundary headings used for determining which type of entry applies
+ * based on the inbound course.
  */
 type EntryBoundaries = Readonly<{
   parallelDirect: Heading;
@@ -152,84 +159,79 @@ type EntryBoundaries = Readonly<{
 }>;
 
 /**
- * Compute the three “boundary” headings used to decide
- * whether the hold entry is Direct, Teardrop, or Parallel.
- *
- * 1. `parallelDirect` is inboundCourse ± 70° (depending on hold direction).
- * 2. `teardropDirect` is the reverse of that boundary.
- * 3. `teardropParallel` is the reverse of the inbound course itself.
+ * Computes the boundary headings used to determine the hold entry type.
  *
  * @param hold A holding pattern definition (time- or distance-based).
  * @returns The boundary headings.
  */
 const computeEntryBoundaries = ({
   inboundCourse,
-  turns,
+  direction,
 }: Hold): EntryBoundaries => {
-  // Decide whether we add or subtract 70° for the "parallelDirect" boundary
-  const addOrSubtract = turns === "Right" ? subtractHeadings : addHeadings;
+  // Determine whether to add or subtract 70° based on hold direction
+  const adjustHeading = direction === "Right" ? subtractHeadings : addHeadings;
 
-  // The boundary that differentiates between Direct and other entries
-  const parallelDirect = addOrSubtract(HeadingSchema.make(70))(inboundCourse);
+  // Boundary between Direct and other entries
+  const parallelDirect = adjustHeading(HeadingSchema.make(70))(inboundCourse);
 
-  // The "teardropDirect" boundary is simply the reverse of that
+  // TeardropDirect is the reverse of parallelDirect
   const teardropDirect = reverseCourse(parallelDirect);
 
-  // The "teardropParallel" boundary is the reverse of the inbound course
+  // TeardropParallel is the reverse of inboundCourse
   const teardropParallel = reverseCourse(inboundCourse);
 
   return { parallelDirect, teardropDirect, teardropParallel };
 };
 
 /**
- * A checker that returns true if a given heading falls
- * within the "Direct" sector of a holding pattern.
+ * Checks if a given heading falls within the "Direct" sector of a holding
+ * pattern.
  *
  * @param boundaries The precomputed boundary headings.
- * @returns A function that takes the pattern direction and
- *          returns another function expecting the heading to check.
+ * @returns A function that takes the hold direction and returns another
+ * function to check the heading.
  */
-const headingToFixIsDirect =
+const isHeadingDirect =
   ({ parallelDirect, teardropDirect }: EntryBoundaries) =>
-  (turns: Direction) =>
+  (direction: HoldingDirection) =>
     headingRangeContains({
       from: parallelDirect,
       to: teardropDirect,
-      direction: turns,
+      direction,
     });
 
 /**
- * A checker that returns true if a given heading falls
- * within the "Teardrop" sector of a holding pattern.
+ * Checks if a given heading falls within the "Teardrop" sector of a holding
+ * pattern.
  *
  * @param boundaries The precomputed boundary headings.
- * @returns A function that takes the pattern direction and
- *          returns another function expecting the heading to check.
+ * @returns A function that takes the hold direction and returns another
+ * function to check the heading.
  */
-const headingToFixIsTeardrop =
+const isHeadingTeardrop =
   ({ teardropParallel, teardropDirect }: EntryBoundaries) =>
-  (turns: Direction) =>
+  (direction: HoldingDirection) =>
     headingRangeContains({
       from: teardropDirect,
       to: teardropParallel,
-      direction: turns,
+      direction,
     });
 
 /**
- * A checker that returns true if a given heading falls
- * within the "Parallel" sector of a holding pattern.
+ * Checks if a given heading falls within the "Parallel" sector of a holding
+ * pattern.
  *
  * @param boundaries The precomputed boundary headings.
- * @returns A function that takes the pattern direction and
- *          returns another function expecting the heading to check.
+ * @returns A function that takes the hold direction and returns another
+ * function to check the heading.
  */
-const headingToFixIsParallel =
+const isHeadingParallel =
   ({ teardropParallel, parallelDirect }: EntryBoundaries) =>
-  (turns: Direction) =>
+  (direction: HoldingDirection) =>
     headingRangeContains({
       from: teardropParallel,
       to: parallelDirect,
-      direction: turns,
+      direction,
     });
 
 /**
@@ -237,117 +239,120 @@ const headingToFixIsParallel =
  * heading.
  *
  * @param hold The holding pattern definition (time- or distance-based).
- * @returns A function that takes a `Heading` and returns a
- * `ReadonlySet<HoldEntry>`.
+ * @returns A function that takes a `Heading` and returns a `ReadonlySet<HoldEntry>`.
  *
  * Usage example:
  * ```
  * // entry is a set of possible HoldEntries (Direct, Teardrop, or Parallel)
- * const entry = computeEntry(myHold)(myHeading);
+ * const entry = determineHoldEntry(myHold)(myHeading);
  * ```
  */
-export const computeEntry =
+export const determineHoldEntry =
   (hold: Hold) =>
-  (courseToFix: Heading): ReadonlySet<HoldEntry> => {
-    const { turns } = hold;
-    const entryBoundaries = computeEntryBoundaries(hold);
+  (headingToFix: Heading): ReadonlySet<HoldEntry> => {
+    const { direction } = hold;
+    const boundaries = computeEntryBoundaries(hold);
 
-    // A list of "entryCheckers" associated with the function that builds the
-    // resulting entry. Each checker is partially applied with the boundaries
-    // (and direction), so each returns true/false for whether `courseToFix`
-    // falls in that sector.
+    // List of entry checkers associated with their respective entry creators
     return (
       [
-        [headingToFixIsDirect, makeDirectEntry],
-        [headingToFixIsTeardrop, makeTeardropEntry],
-        [headingToFixIsParallel, makeParallelEntry],
+        [isHeadingDirect, createDirectEntry],
+        [isHeadingTeardrop, createTeardropEntry],
+        [isHeadingParallel, createParallelEntry],
       ] as const
-    ).reduce((result, [entryChecker, resultingEntry]) => {
-      // If the checker says "yes, courseToFix is in my sector", we add that
-      // entry type
-      if (entryChecker(entryBoundaries)(turns)(courseToFix)) {
-        result.add(resultingEntry());
+    ).reduce((result, [entryChecker, createEntry]) => {
+      if (entryChecker(boundaries)(direction)(headingToFix)) {
+        result.add(createEntry());
       }
       return result;
     }, new Set<HoldEntry>());
   };
 
-const IntersectionName = Effect.sync(() =>
+const generateIntersectionName = Effect.sync(() =>
   faker.word.noun({ length: { min: 5, max: 5 } }).toUpperCase()
 );
 
-const toTitleCase = (w: string) =>
-  w.replace(
+const toTitleCase = (word: string) =>
+  word.replace(
     /\w\S*/g,
     (text) => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
   );
 
-const VorName = pipe(
+const generateVorName = pipe(
   () => faker.word.noun(),
   Effect.sync,
   Effect.map(toTitleCase),
-  Effect.map((a) => `${a} VOR`)
+  Effect.map((name) => `${name} VOR`)
 );
 
-const FixName = pipe(
-  [IntersectionName, VorName],
+const generateFixName = pipe(
+  [generateIntersectionName, generateVorName],
   Random.choice,
   Effect.flatten
 );
 
-const RandomTurn: Effect.Effect<Direction, NoSuchElementException, never> =
-  Random.choice(["Left", "Right"] as const);
+const randomTurnDirectionEffect: Effect.Effect<
+  Direction,
+  NoSuchElementException,
+  never
+> = Random.choice(["Left", "Right"] as const);
 
-const RandomTime: Effect.Effect<Second, NoSuchElementException, never> =
-  Random.choice([
-    SecondSchema.make(60),
-    SecondSchema.make(60),
-    SecondSchema.make(60),
-    SecondSchema.make(60),
-    SecondSchema.make(60),
-    SecondSchema.make(60),
-    SecondSchema.make(90),
-    SecondSchema.make(90),
-    SecondSchema.make(120),
-  ]);
+const randomHoldDurationEffect: Effect.Effect<
+  DurationSeconds,
+  NoSuchElementException,
+  never
+> = Random.choice([
+  DurationSecondsSchema.make(60),
+  DurationSecondsSchema.make(60),
+  DurationSecondsSchema.make(60),
+  DurationSecondsSchema.make(60),
+  DurationSecondsSchema.make(60),
+  DurationSecondsSchema.make(60),
+  DurationSecondsSchema.make(90),
+  DurationSecondsSchema.make(90),
+  DurationSecondsSchema.make(120),
+]);
 
-const RandomDistance: Effect.Effect<Decimile, NoSuchElementException, never> =
-  Random.choice([
-    DecimileSchema.make(40),
-    DecimileSchema.make(40),
-    DecimileSchema.make(40),
-    DecimileSchema.make(40),
-    DecimileSchema.make(40),
-    DecimileSchema.make(50),
-    DecimileSchema.make(100),
-  ]);
+const randomHoldDistanceEffect: Effect.Effect<
+  DistanceDecimiles,
+  NoSuchElementException,
+  never
+> = Random.choice([
+  DistanceDecimilesSchema.make(40),
+  DistanceDecimilesSchema.make(40),
+  DistanceDecimilesSchema.make(40),
+  DistanceDecimilesSchema.make(40),
+  DistanceDecimilesSchema.make(40),
+  DistanceDecimilesSchema.make(50),
+  DistanceDecimilesSchema.make(100),
+]);
 
-type Foo =
-  | (Pick<DistanceBasedHold, "_tag"> & {
-      distance: Effect.Effect<Decimile, NoSuchElementException, never>;
-    })
-  | (Pick<TimeBasedHold, "_tag"> & {
-      time: Effect.Effect<Second, NoSuchElementException, never>;
-    });
+const holdLegOptions = [
+  { distanceDecimiles: randomHoldDistanceEffect, _tag: "DistanceBasedLeg" },
+  { durationSeconds: randomHoldDurationEffect, _tag: "TimeBasedLeg" },
+] as const;
 
-const Foo = pipe(
-  [
-    { distance: RandomDistance, _tag: "DistanceBasedLeg" },
-    { time: RandomTime, _tag: "TimeBasedLeg" },
-  ] as const,
+type HoldLegOption = (typeof holdLegOptions)[number];
+
+/**
+ * Randomly selects and generates a hold leg (either distance-based or
+ * time-based).
+ */
+const generateRandomHoldLeg = pipe(
+  holdLegOptions,
   Random.choice,
   Effect.flatMap(
-    Match.type<Foo>().pipe(
-      Match.tag("DistanceBasedLeg", ({ distance, _tag }) =>
+    Match.type<HoldLegOption>().pipe(
+      Match.tag("DistanceBasedLeg", ({ distanceDecimiles, _tag }) =>
         Effect.gen(function* () {
-          const distance_ = yield* distance;
-          return { _tag, distance: distance_ };
+          const distance = yield* distanceDecimiles;
+          return { _tag, distanceDecimiles: distance };
         })
       ),
-      Match.tag("TimeBasedLeg", ({ time, _tag }) =>
+      Match.tag("TimeBasedLeg", ({ durationSeconds, _tag }) =>
         Effect.gen(function* () {
-          const time_ = yield* time;
-          return { _tag, time: time_ };
+          const duration = yield* durationSeconds;
+          return { _tag, durationSeconds: duration };
         })
       ),
       Match.exhaustive
@@ -355,35 +360,58 @@ const Foo = pipe(
   )
 );
 
-type HoldingProblem = {
+type HoldingPatternScenario = {
   hold: Hold;
   courseToFix: Heading;
   solution: ReadonlySet<HoldEntry>;
 };
 
-const foo: Effect.Effect<
-  HoldingProblem,
-  NoSuchElementException | Error,
+/**
+ * Generates a holding pattern scenario, including the hold definition,
+ * course to fix, and the set of applicable hold entries.
+ */
+const generateHoldingScenarioEffect: Effect.Effect<
+  HoldingPatternScenario,
+  unknown,
   never
 > = Effect.gen(function* () {
-  const fix = yield* FixName;
+  const fix = yield* generateFixName;
   const inboundCourse = yield* RandomHeading;
   const courseToFix = yield* RandomHeading;
-  const turns = yield* RandomTurn;
-  const howFar = yield* Foo;
+  const direction = yield* randomTurnDirectionEffect;
+  const holdLeg = yield* generateRandomHoldLeg;
+  const efcMinutes = yield* Random.nextIntBetween(1, 60);
 
   const hold = {
-    ...howFar,
+    ...holdLeg,
     fix,
     inboundCourse,
-    turns,
+    direction,
+    efcMinutes,
   } as const;
 
   return {
     hold,
     courseToFix,
-    solution: computeEntry(hold)(courseToFix),
+    solution: determineHoldEntry(hold)(courseToFix),
   };
 });
 
-pipe(foo, Effect.tap(Console.log), Effect.runSync);
+export const atcifyHold = (hold: Hold): string => {
+  return `Hold ${getCardinalDirection(reverseCourse(hold.inboundCourse))} of ${
+    hold.fix
+  } on the ${reverseCourse(hold.inboundCourse)}º radial, ${
+    hold.direction
+  } turns, ${
+    hold._tag === "DistanceBasedLeg"
+      ? `${hold.distanceDecimiles / 10} mile`
+      : `${hold.durationSeconds / 60} minute`
+  } legs, expect further clearance in ${hold.efcMinutes} minutes.`;
+};
+
+pipe(
+  generateHoldingScenarioEffect,
+  Effect.tap(Console.log),
+  Effect.tap(({ hold }) => Console.log(atcifyHold(hold))),
+  Effect.runSync
+);
